@@ -3,16 +3,16 @@
 use DBI;
 use CGI qw(:standard);
 
-## flush STDOUT
+## 不要缓存标准输出
 $| = 1;
 
-## get form params
+## 定义表单的变量赋值
 my $q_user = param('user');
 my $q_host = param('host');
 my $q_date = param('date');
 my $q_limit = param('limit') || 34;
 
-## host/ip maps
+## 主机昵称和ip的对应
 my %hosts = (
     "db-157" => "192.168.1.157",
     "xyd-157" => "192.168.1.157",
@@ -32,13 +32,13 @@ my %hosts = (
     "gs-8" => "192.168.1.8",
 );
 
-## header form goes here
+## html头
 print header(-charset=>'utf-8'),
 	start_html('Bash History Query'),
 	h1('Bash History Query'),
 	h2('Query Criteria');
 
-## forms goes here
+## 表单
 print start_form,
 	p("Enter the username:", textfield("user")),
 	p("Enter the command display limit(default 34):", textfield("limit")),
@@ -47,9 +47,10 @@ print start_form,
 	submit(),
 	end_form;
 
-## construct query statment based on the form return value
-my @query_cri;		# criteria array
-my $query_stat;		# query statement
+## 逻辑及数据处理
+## 依据表单返回值构建sql查询语句
+my @query_cri;		# 存储查询条件
+my $query_stat;		# 查詢的sql语句
 if (exists($hosts{$q_host})) {
     my $host = $hosts{$q_host};
     push @query_cri, " (host = \'$host\') ";
@@ -67,7 +68,7 @@ if(@query_cri > 0) {
 $query_stat .= " ORDER BY date DESC LIMIT $q_limit ";
 
 unless($q_user eq "") {
-## connect mysql
+## 连接mysql
     my $database = 'users_command';
     my $hostname = 'localhost';
     my $port = '3306';
@@ -75,7 +76,7 @@ unless($q_user eq "") {
     my $pw = 'somepass';
     my $dbh = DBI->connect("DBI:mysql:$database:$hostname:$port", $username, $pw, {RaiseError => 1});
 
-## execute sql
+## 执行sql语句
     my $sth = $dbh->prepare(qq{SELECT * FROM command $query_stat})
 	or die "Unable to prepare our query:".$dbh->errstr."\n";
     my $rc = $sth->execute()
